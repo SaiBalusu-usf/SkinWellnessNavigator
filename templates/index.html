@@ -1,31 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skin Wellness Navigator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .upload-section {
-            margin: 20px 0;
-            padding: 20px;
-            border: 2px dashed #ccc;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <h1>Skin Wellness Navigator</h1>
-    <div class="upload-section">
-        <h2>Upload Skin Image</h2>
-        <form id="upload-form">
-            <input type="file" id="image-input" accept="image/*">
-            <button type="submit">Analyze Image</button>
-        </form>
-        <div id="result"></div>
-    </div>
+    <header class="header">
+        <nav class="nav-menu container">
+            <div class="logo">
+                <i class="fas fa-microscope"></i>
+                <h1>Skin Wellness Navigator</h1>
+            </div>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#analysis">Analysis</a></li>
+                <li><a href="#history">History</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                <i class="fas fa-moon"></i>
+            </button>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Advanced Skin Analysis</h2>
+            <p>Get personalized skin care recommendations using AI-powered analysis</p>
+        </div>
+    </section>
+
+    <main class="container">
+        <section id="analysis" class="upload-section">
+            <h2>Analyze Your Skin</h2>
+            <p>Upload an image of your skin concern for instant analysis</p>
+            
+            <div class="upload-area" id="upload-area" data-tooltip="Click or drag an image here">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag and drop your image here or click to browse</p>
+                <form id="upload-form">
+                    <input type="file" id="image-input" accept="image/*" hidden>
+                    <button type="button" class="btn" id="browse-btn">Browse Files</button>
+                </form>
+            </div>
+
+            <div id="image-preview"></div>
+
+            <div class="progress-container" style="display: none;">
+                <div id="analysis-progress" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            <div class="loading" id="loading" style="display: none;">
+                <div class="loading-spinner" role="status">
+                    <span class="screen-reader-only">Loading...</span>
+                </div>
+                <p>Analyzing your image...</p>
+            </div>
+
+            <div class="result-section" id="result"></div>
+        </section>
+
+        <section class="tips-container">
+            <h3>Skin Care Tips</h3>
+            <p id="skin-tip" class="skin-tip">Apply sunscreen daily, even on cloudy days</p>
+        </section>
+
+        <section id="history" class="history-section">
+            <h2>Analysis History</h2>
+            <div id="history-container" class="history-container">
+                <!-- History items will be populated here -->
+            </div>
+        </section>
+
+        <section id="about" class="info-section">
+            <h2>About Skin Wellness Navigator</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-tooltip="State-of-the-art analysis technology">
+                    <i class="fas fa-microscope"></i>
+                    <h3>Advanced Analysis</h3>
+                    <p>State-of-the-art skin analysis using AI technology</p>
+                </div>
+                <div class="feature-card" data-tooltip="Your data is encrypted and secure">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Privacy First</h3>
+                    <p>Your data is secure and never shared</p>
+                </div>
+                <div class="feature-card" data-tooltip="Get comprehensive skin health insights">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Detailed Reports</h3>
+                    <p>Get comprehensive insights about your skin health</p>
+                </div>
+                <div class="feature-card" data-tooltip="Track your skin health progress">
+                    <i class="fas fa-history"></i>
+                    <h3>Progress Tracking</h3>
+                    <p>Monitor your skin health improvements over time</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content container">
+            <div class="footer-info">
+                <p>&copy; 2024 Skin Wellness Navigator. All rights reserved.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#privacy" data-tooltip="View our privacy policy">Privacy Policy</a>
+                <a href="#terms" data-tooltip="Read our terms of service">Terms of Service</a>
+                <a href="#contact" data-tooltip="Get in touch with us">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="static/js/main.js"></script>
 </body>
 </html>
