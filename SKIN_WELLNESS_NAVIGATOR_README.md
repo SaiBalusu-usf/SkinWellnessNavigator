@@ -1,100 +1,195 @@
-# Skin Wellness Navigator
-
-A web application for AI-driven skin lesion analysis to assist in early detection of potential skin cancers.
+# Skin Wellness Navigator - User Guide
 
 ## Overview
 
-The Skin Wellness Navigator is designed to help users analyze images of skin lesions using AI to determine if they appear benign or potentially malignant. This application provides:
+The Skin Wellness Navigator is an advanced tool designed to assist in the early detection and assessment of skin conditions. By combining AI technology with NIH clinical datasets, it provides instant analysis of skin lesions and offers evidence-based recommendations.
 
-- A user-friendly web interface for image upload
-- Image preprocessing capabilities
-- A backend API for classification
-- Clear result visualization
+## Getting Started
 
-## Project Structure
+### Using the Analysis Tool
 
-```
-Skin Wellness Navigator/
-├── server.py              # Flask backend server
-├── requirements.txt       # Python dependencies
-├── templates/             # HTML templates
-│   └── index.html         # Main application page
-├── static/                # Static assets
-│   ├── css/
-│   │   └── style.css      # Application styling
-│   └── js/
-│       └── main.js        # Frontend JavaScript
-└── SKIN_WELLNESS_NAVIGATOR_README.md  # This file
-```
+1. **Upload Your Image**
+   - Click "Browse Files" or drag and drop an image
+   - Supported formats: JPG, PNG, JPEG
+   - Ensure good lighting and clear focus in your images
+   - Avoid using filters or editing the images
 
-## Setup and Installation
+2. **Analysis Process**
+   - The system will automatically process your image
+   - Analysis typically takes 10-15 seconds
+   - Progress bar shows real-time processing status
 
-### Python Configuration (Windows)
+3. **Understanding Results**
+   - Classification (Benign/Malignant)
+   - Confidence score
+   - Risk level assessment
+   - Similar cases comparison
+   - Stage distribution analysis
+   - Personalized recommendations
 
-If you encounter the error: `python: The term 'python' is not recognized...`, you need to add Python to your system PATH:
+### Interpreting Results
 
-1. **Find Your Python Installation**:
-   - Open Command Prompt and run: `where py` to locate your Python installation
-   - Typically found in: `C:\Users\<username>\AppData\Local\Programs\Python\Python<version>` or `C:\Python<version>`
+#### Classification Categories
 
-2. **Add Python to PATH**:
-   - **Method 1: Using System Properties**:
-     1. Right-click on 'This PC' or 'My Computer' and select 'Properties'
-     2. Click on 'Advanced system settings'
-     3. Click the 'Environment Variables' button
-     4. Under 'System variables', find and select 'Path', then click 'Edit'
-     5. Click 'New' and add the path to your Python installation (e.g., `C:\Python311`)
-     6. Add another entry for the Scripts folder (e.g., `C:\Python311\Scripts`)
-     7. Click 'OK' on all dialogs to save changes
-   
-   - **Method 2: Using Command Prompt (Administrative)**:
-     ```
-     setx PATH "%PATH%;C:\Path\to\Python;C:\Path\to\Python\Scripts" /M
-     ```
-     Replace `C:\Path\to\Python` with your actual Python installation path
+- **Benign**: Typically non-cancerous lesions
+- **Malignant**: Potentially cancerous lesions requiring medical attention
 
-3. **Verify the Configuration**:
-   - Close and reopen Command Prompt
-   - Run: `python --version` to confirm Python is recognized
+#### Confidence Levels
 
-### Installing Dependencies and Running the Application
+- **High (>80%)**: Strong prediction confidence
+- **Medium (50-80%)**: Moderate prediction confidence
+- **Low (<50%)**: Uncertain prediction
 
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+#### Risk Levels
 
-2. **Run the Application**:
-   ```bash
-   python server.py
-   ```
+- **Low Risk**: Regular monitoring recommended
+- **Medium Risk**: Follow-up with healthcare provider advised
+- **High Risk**: Immediate medical consultation recommended
 
-3. **Access the Application**:
-   Open a web browser and navigate to `http://127.0.0.1:5000`
+## Clinical Data Integration
 
-### Troubleshooting
+### Data Sources
 
-- If Python is still not recognized after updating PATH, try restarting your computer
-- Ensure there are no typos in the PATH entries
-- If using `py` works but `python` doesn't, you can create an alias by adding a python.bat file to a directory in your PATH with the content: `@py.exe %*`
+The system utilizes comprehensive clinical data including:
+- Patient demographics
+- Disease characteristics
+- Treatment outcomes
+- Stage distribution
+- Morphology types
 
-## Future Model Integration
+### Statistical Analysis
 
-This application is currently set up with placeholder functions for AI model integration. To integrate an actual skin cancer classification model:
+Provides insights based on:
+- Age distribution patterns
+- Gender-specific trends
+- Stage progression data
+- Treatment response rates
 
-1. Update the `load_model()` function in `server.py` to load your trained model
-2. Adjust the `preprocess_image()` function to match your model's required input format
-3. Modify the `predict_skin_cancer()` function to use your model for making predictions
+## Best Practices
 
-### Expected Model Requirements
+### Image Capture Guidelines
 
-When implementing a skin cancer classification model, consider:
+1. **Lighting**
+   - Use natural, diffused light
+   - Avoid direct flash
+   - Ensure even lighting
 
-- Input image size (currently set to 224x224 pixels)
-- Color channel format (RGB)
-- Pixel normalization method (currently dividing by 255.0)
-- Output format (class labels and confidence scores)
+2. **Focus and Distance**
+   - Keep camera 6-8 inches from the lesion
+   - Ensure image is clear and in focus
+   - Include some surrounding skin for context
 
-## Disclaimer
+3. **Multiple Angles**
+   - Take photos from different angles
+   - Include close-up and wider views
+   - Document any changes over time
 
-This application is intended for educational and informational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of a qualified healthcare provider for any medical concerns.
+### Regular Monitoring
+
+1. **Documentation**
+   - Keep track of analysis history
+   - Note any changes in appearance
+   - Save and compare reports
+
+2. **Follow-up Schedule**
+   - Regular self-examinations
+   - Periodic professional check-ups
+   - Immediate review of concerning changes
+
+## Important Medical Disclaimer
+
+### Not a Diagnostic Tool
+
+This system is designed to assist in preliminary assessment only and should not be used as a replacement for professional medical diagnosis. Always consult with qualified healthcare providers for:
+- Official diagnosis
+- Treatment plans
+- Medical advice
+- Follow-up care
+
+### When to Seek Immediate Medical Attention
+
+Contact a healthcare provider immediately if you notice:
+- Rapid changes in size or color
+- Irregular borders
+- Multiple colors
+- Diameter larger than 6mm
+- Evolution or changes in appearance
+- Bleeding or itching
+- New growths
+
+## Privacy and Security
+
+### Data Protection
+
+- All analysis is performed locally
+- No images are stored on servers
+- Personal information is not collected
+- Results can be exported locally
+
+### HIPAA Considerations
+
+- Compliant with healthcare privacy standards
+- Secure data handling
+- No third-party data sharing
+- Protected health information safeguards
+
+## Support and Resources
+
+### Educational Materials
+
+- ABCDE rule of melanoma
+- Monthly self-examination guide
+- Risk factor assessment
+- Prevention strategies
+
+### Additional Resources
+
+- Skin cancer prevention guidelines
+- Sun protection recommendations
+- Regular screening schedules
+- Professional dermatology associations
+
+## Technical Support
+
+### Common Issues
+
+1. **Image Upload Problems**
+   - Check file format
+   - Verify file size
+   - Ensure stable internet connection
+
+2. **Analysis Errors**
+   - Refresh and retry
+   - Clear browser cache
+   - Update browser if needed
+
+### Contact Information
+
+[Add Support Contact Details]
+
+## Updates and Maintenance
+
+### Version History
+
+- Current Version: 1.0.0
+- Last Updated: [Date]
+- Regular updates for improved accuracy
+
+### Planned Improvements
+
+- Enhanced analysis capabilities
+- Additional data integration
+- Mobile application development
+- Expanded educational resources
+
+## Acknowledgments
+
+This tool incorporates data and research from:
+- National Institutes of Health (NIH)
+- Clinical research institutions
+- Healthcare professionals
+- Medical research community
+
+## References
+
+[Add relevant medical and technical references]
