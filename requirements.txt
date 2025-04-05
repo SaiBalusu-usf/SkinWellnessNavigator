@@ -1,0 +1,8 @@
+Flask==2.0.1
+Pillow==9.0.0
+numpy==1.22.0
+# The following are placeholders for when the model is implemented
+# tensorflow==2.8.0
+# scikit-learn==1.0.2
+# torchvision==0.12.0
+# torch==1.11.0
