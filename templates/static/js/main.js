@@ -18,7 +18,36 @@ if (localStorage.getItem('dark-theme') === 'true') {
 
 themeToggle.addEventListener('click', toggleTheme);
 
-// Image preview and validation
+// Image analysis and handling
+async function analyzeImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        showLoading();
+        updateProgress();
+
+        const response = await fetch('/api/analyze', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Analysis failed');
+        }
+
+        const results = await response.json();
+        displayResult(results);
+        saveToHistory(results);
+        showNotification('Analysis complete!', 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error analyzing image. Please try again.', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
 function handleImagePreview(file) {
     const preview = document.getElementById('image-preview');
     const reader = new FileReader();
@@ -63,16 +92,180 @@ function updateProgress() {
     }
 }
 
-// Tips carousel with fade effect
+function showLoading() {
+    document.getElementById('loading').style.display = 'block';
+    analysisProgress = 0;
+}
+
+function hideLoading() {
+    document.getElementById('loading').style.display = 'none';
+}
+
+// Display analysis results
+function displayResult(results) {
+    const result = document.getElementById('result');
+    const confidencePercentage = (results.confidence * 100).toFixed(1);
+    const riskLevel = getRiskLevel(results.confidence);
+    
+    result.innerHTML = `
+        <div class="result-card">
+            <h3><i class="fas ${results.prediction === 'Malignant' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> Analysis Complete</h3>
+            
+            <div class="result-grid">
+                <div class="result-item ${riskLevel.class}">
+                    <h4>Classification</h4>
+                    <p>${results.prediction}</p>
+                    <div class="confidence-bar">
+                        <div class="confidence-level" style="width: ${confidencePercentage}%"></div>
+                    </div>
+                    <small>Confidence: ${confidencePercentage}%</small>
+                </div>
+                
+                <div class="result-item">
+                    <h4>Similar Cases</h4>
+                    <p>${results.similar_cases} cases</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>Common Morphology</h4>
+                    <p>${results.risk_factors.common_morphology}</p>
+                </div>
+            </div>
+
+            <div class="stage-distribution">
+                <h4>Stage Distribution</h4>
+                <div class="stage-bars">
+                    ${Object.entries(results.risk_factors.stage_distribution)
+                        .map(([stage, count]) => `
+                            <div class="stage-bar-item">
+                                <div class="stage-label">${stage}</div>
+                                <div class="stage-bar">
+                                    <div class="stage-bar-fill" style="width: ${(count / Math.max(...Object.values(results.risk_factors.stage_distribution))) * 100}%"></div>
+                                </div>
+                                <div class="stage-count">${count}</div>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h4>Recommendations</h4>
+                <ul>
+                    ${results.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+            </div>
+
+            <div class="result-actions">
+                <button class="btn" onclick="exportReport(${JSON.stringify(results)})">
+                    <i class="fas fa-download"></i> Export Report
+                </button>
+                <button class="btn btn-secondary" onclick="showHistoricalComparison(${JSON.stringify(results)})">
+                    <i class="fas fa-history"></i> Compare with History
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function getRiskLevel(confidence) {
+    if (confidence > 0.8) {
+        return { class: 'high-risk', label: 'High Risk' };
+    } else if (confidence > 0.5) {
+        return { class: 'medium-risk', label: 'Medium Risk' };
+    }
+    return { class: 'low-risk', label: 'Low Risk' };
+}
+
+// History tracking
+const analysisHistory = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
+
+function saveToHistory(results) {
+    const history = {
+        date: new Date().toISOString(),
+        results: results
+    };
+    analysisHistory.unshift(history);
+    if (analysisHistory.length > 5) analysisHistory.pop();
+    localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+    updateHistoryDisplay();
+}
+
+function updateHistoryDisplay() {
+    const historyContainer = document.getElementById('history-container');
+    if (!historyContainer) return;
+    
+    if (analysisHistory.length === 0) {
+        historyContainer.innerHTML = '<p class="no-history">No analysis history yet</p>';
+        return;
+    }
+    
+    historyContainer.innerHTML = analysisHistory.map(item => `
+        <div class="history-item ${item.results.prediction.toLowerCase()}-prediction">
+            <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
+            <div class="history-result">
+                <strong>Classification:</strong> ${item.results.prediction}<br>
+                <strong>Confidence:</strong> ${(item.results.confidence * 100).toFixed(1)}%
+            </div>
+            <div class="history-actions">
+                <button class="btn btn-sm" onclick="exportReport(${JSON.stringify(item.results)})">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="showDetails(${JSON.stringify(item.results)})">
+                    <i class="fas fa-info-circle"></i> Details
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Export report functionality
+function exportReport(results) {
+    const reportData = {
+        date: new Date().toLocaleDateString(),
+        results: results
+    };
+    
+    const reportText = `
+Skin Lesion Analysis Report
+Generated on: ${reportData.date}
+
+Analysis Results:
+- Classification: ${results.prediction}
+- Confidence: ${(results.confidence * 100).toFixed(1)}%
+- Similar Cases: ${results.similar_cases}
+- Common Morphology: ${results.risk_factors.common_morphology}
+
+Stage Distribution:
+${Object.entries(results.risk_factors.stage_distribution)
+    .map(([stage, count]) => `${stage}: ${count} cases`)
+    .join('\n')}
+
+Recommendations:
+${results.recommendations.map(rec => '- ' + rec).join('\n')}
+
+Note: This report is generated based on AI analysis and should be used as a general guide.
+Please consult with a dermatologist for professional medical advice.
+    `.trim();
+    
+    const blob = new Blob([reportText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `skin-analysis-report-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Tips carousel
 const tips = [
-    "Apply sunscreen daily, even on cloudy days",
-    "Stay hydrated for healthy skin",
-    "Get 7-8 hours of sleep for skin regeneration",
-    "Eat a balanced diet rich in antioxidants",
-    "Cleanse your face twice daily",
-    "Use gentle, non-comedogenic products",
+    "Regular skin checks can help detect issues early",
+    "Use sunscreen daily to prevent UV damage",
+    "Document any changes in moles or skin lesions",
+    "Schedule regular dermatologist visits",
+    "Know your skin cancer risk factors",
     "Protect your skin from excessive sun exposure",
-    "Don't forget to moisturize daily"
+    "Learn the ABCDE rule for melanoma detection",
+    "Keep track of your skin examination history"
 ];
 
 let currentTip = 0;
@@ -91,91 +284,12 @@ function showNextTip() {
 // Initialize tips carousel
 setInterval(showNextTip, 5000);
 
-// History tracking with local storage
-const analysisHistory = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
-
-function saveToHistory(result) {
-    const history = {
-        date: new Date().toISOString(),
-        result: result
-    };
-    analysisHistory.unshift(history);
-    if (analysisHistory.length > 5) analysisHistory.pop();
-    localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
-    updateHistoryDisplay();
-}
-
-function updateHistoryDisplay() {
-    const historyContainer = document.getElementById('history-container');
-    if (!historyContainer) return;
-    
-    if (analysisHistory.length === 0) {
-        historyContainer.innerHTML = '<p class="no-history">No analysis history yet</p>';
-        return;
-    }
-    
-    historyContainer.innerHTML = analysisHistory.map(item => `
-        <div class="history-item">
-            <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
-            <div class="history-result">
-                <strong>Skin Type:</strong> ${item.result.skinType}<br>
-                <strong>Hydration:</strong> ${item.result.hydration}<br>
-                <strong>UV Damage:</strong> ${item.result.uvDamage}
-            </div>
-            <button class="btn btn-sm" onclick="exportReport(${JSON.stringify(item.result)})">
-                <i class="fas fa-download"></i> Export
-            </button>
-        </div>
-    `).join('');
-}
-
-// Export report functionality
-function exportReport(result) {
-    const reportData = {
-        date: new Date().toLocaleDateString(),
-        result: result
-    };
-    
-    const reportText = `
-Skin Wellness Report
-Generated on: ${reportData.date}
-
-Analysis Results:
-- Skin Type: ${result.skinType}
-- Hydration Level: ${result.hydration}
-- UV Damage: ${result.uvDamage}
-
-Recommendations:
-${result.recommendations.map(rec => '- ' + rec).join('\n')}
-
-Next Steps:
-1. Follow the recommended skincare routine
-2. Monitor changes in your skin condition
-3. Schedule regular skin checkups
-4. Use recommended products consistently
-
-Note: This report is generated based on AI analysis and should be used as a general guide.
-Please consult with a dermatologist for professional medical advice.
-    `.trim();
-    
-    const blob = new Blob([reportText], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `skin-wellness-report-${new Date().toISOString().split('T')[0]}.txt`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-}
-
-// Handle file upload and analysis
+// Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     const uploadArea = document.getElementById('upload-area');
     const imageInput = document.getElementById('image-input');
     const browseBtn = document.getElementById('browse-btn');
-    const uploadForm = document.getElementById('upload-form');
-    const loading = document.getElementById('loading');
-    const result = document.getElementById('result');
-
+    
     // Initialize history display
     updateHistoryDisplay();
 
@@ -194,7 +308,6 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadArea.classList.remove('drag-over');
         const files = e.dataTransfer.files;
         if (files.length > 0 && files[0].type.startsWith('image/')) {
-            imageInput.files = files;
             handleImageUpload(files[0]);
         } else {
             showNotification('Please upload an image file', 'error');
@@ -219,61 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         handleImagePreview(file);
-        loading.style.display = 'block';
-        analysisProgress = 0;
-        updateProgress();
-
-        // Simulate analysis (replace with actual API call)
-        setTimeout(() => {
-            loading.style.display = 'none';
-            const analysisResult = {
-                skinType: 'Normal to Combination',
-                hydration: 'Good',
-                uvDamage: 'Minimal',
-                recommendations: [
-                    'Continue with regular moisturizing',
-                    'Use SPF 30+ sunscreen daily',
-                    'Consider adding vitamin C serum to your routine',
-                    'Maintain consistent cleansing routine'
-                ]
-            };
-            displayResult(analysisResult);
-            saveToHistory(analysisResult);
-            showNotification('Analysis complete!', 'success');
-        }, 3000);
-    }
-
-    function displayResult(analysisResult) {
-        result.innerHTML = `
-            <div class="result-card">
-                <h3><i class="fas fa-check-circle"></i> Analysis Complete</h3>
-                <div class="result-grid">
-                    <div class="result-item">
-                        <h4>Skin Type</h4>
-                        <p>${analysisResult.skinType}</p>
-                    </div>
-                    <div class="result-item">
-                        <h4>Hydration Level</h4>
-                        <p>${analysisResult.hydration}</p>
-                    </div>
-                    <div class="result-item">
-                        <h4>UV Damage</h4>
-                        <p>${analysisResult.uvDamage}</p>
-                    </div>
-                </div>
-                <div class="recommendations">
-                    <h4>Recommendations</h4>
-                    <ul>
-                        ${analysisResult.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                    </ul>
-                </div>
-                <div class="result-actions">
-                    <button class="btn" onclick="exportReport(${JSON.stringify(analysisResult)})">
-                        <i class="fas fa-download"></i> Export Report
-                    </button>
-                </div>
-            </div>
-        `;
+        analyzeImage(file);
     }
 });
 

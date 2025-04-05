@@ -4,8 +4,11 @@ numpy>=1.22.0
 pandas>=2.0.0
 seaborn>=0.12.0
 matplotlib>=3.7.0
-# The following are placeholders for when the model is implemented
-# tensorflow==2.8.0
-# scikit-learn==1.0.2
-# torchvision==0.12.0
-# torch==1.11.0
+tensorflow>=2.8.0
+scikit-learn>=1.0.2
+torchvision>=0.12.0
+torch>=1.11.0
+opencv-python>=4.7.0
+Flask-Cors>=3.0.10
+gunicorn>=20.1.0
+python-dotenv>=0.19.0
