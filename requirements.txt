@@ -1,6 +1,9 @@
-Flask==2.0.1
-Pillow==9.0.0
-numpy==1.22.0
+Flask>=2.0.1
+Pillow>=10.0.0
+numpy>=1.22.0
+pandas>=2.0.0
+seaborn>=0.12.0
+matplotlib>=3.7.0
 # The following are placeholders for when the model is implemented
 # tensorflow==2.8.0
 # scikit-learn==1.0.2
