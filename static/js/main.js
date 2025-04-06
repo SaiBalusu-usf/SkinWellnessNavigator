@@ -106,24 +106,10 @@ function displayResult(results) {
     const result = document.getElementById('result');
     const confidencePercentage = (results.confidence * 100).toFixed(1);
     const riskLevel = getRiskLevel(results.confidence);
-    const usingFallback = results.using_fallback || false;
-    
-    // If using fallback, show a notification
-    if (usingFallback) {
-        showNotification('Analysis was performed using fallback system as Gemini AI was unavailable.', 'warning');
-    }
     
     result.innerHTML = `
-        <div class="result-card ${usingFallback ? 'fallback-result' : ''}">
-            ${usingFallback ? '<div class="fallback-badge">Fallback Analysis</div>' : ''}
+        <div class="result-card">
             <h3><i class="fas ${results.prediction === 'Malignant' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> Analysis Complete</h3>
-            
-            ${usingFallback ? 
-            `<div class="fallback-notice">
-                <i class="fas fa-info-circle"></i>
-                This analysis was performed using a fallback system because the Gemini AI model was temporarily unavailable.
-                While this analysis provides useful information, consider re-analyzing later when the AI service is available.
-            </div>` : ''}
             
             <div class="result-grid">
                 <div class="result-item ${riskLevel.class}">
@@ -137,48 +123,29 @@ function displayResult(results) {
                 
                 <div class="result-item">
                     <h4>Similar Cases</h4>
-                    <p>${results.clinical_insights && results.clinical_insights.similar_cases ? results.clinical_insights.similar_cases : 'N/A'} cases</p>
+                    <p>${results.similar_cases} cases</p>
                 </div>
                 
                 <div class="result-item">
                     <h4>Common Morphology</h4>
-                    <p>${results.clinical_insights && results.clinical_insights.common_morphology ? results.clinical_insights.common_morphology : 'N/A'}</p>
+                    <p>${results.risk_factors.common_morphology}</p>
                 </div>
             </div>
 
-            <div class="characteristics-section">
-                <h4>Lesion Characteristics</h4>
-                <div class="characteristics-grid">
-                    ${Object.entries(results.characteristics || {}).map(([key, value]) => `
-                        <div class="characteristic-item">
-                            <strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong>
-                            <span>${value}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            ${results.clinical_insights && results.clinical_insights.stage_distribution ? `
             <div class="stage-distribution">
                 <h4>Stage Distribution</h4>
                 <div class="stage-bars">
-                    ${Object.entries(results.clinical_insights.stage_distribution)
+                    ${Object.entries(results.risk_factors.stage_distribution)
                         .map(([stage, count]) => `
                             <div class="stage-bar-item">
                                 <div class="stage-label">${stage}</div>
                                 <div class="stage-bar">
-                                    <div class="stage-bar-fill" style="width: ${(count / Math.max(...Object.values(results.clinical_insights.stage_distribution))) * 100}%"></div>
+                                    <div class="stage-bar-fill" style="width: ${(count / Math.max(...Object.values(results.risk_factors.stage_distribution))) * 100}%"></div>
                                 </div>
                                 <div class="stage-count">${count}</div>
                             </div>
                         `).join('')}
                 </div>
-            </div>
-            ` : ''}
-
-            <div class="reasoning-section">
-                <h4>Analysis Reasoning</h4>
-                <p>${results.reasoning || 'No detailed reasoning available.'}</p>
             </div>
 
             <div class="recommendations">
@@ -189,11 +156,11 @@ function displayResult(results) {
             </div>
 
             <div class="result-actions">
-                <button class="btn" onclick='exportReport(${JSON.stringify(results).replace(/'/g, "\\'")})'">
+                <button class="btn" onclick="exportReport(${JSON.stringify(results)})">
                     <i class="fas fa-download"></i> Export Report
                 </button>
-                <button class="btn btn-secondary" onclick="window.location.reload()">
-                    <i class="fas fa-redo"></i> New Analysis
+                <button class="btn btn-secondary" onclick="showHistoricalComparison(${JSON.stringify(results)})">
+                    <i class="fas fa-history"></i> Compare with History
                 </button>
             </div>
         </div>

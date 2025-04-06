@@ -1,0 +1,47 @@
+2025-04-05 19:52:20,230 - __main__ - INFO - Gemini model initialized successfully
+2025-04-05 19:52:20,275 - __main__ - INFO - Clinical data loaded successfully
+2025-04-05 19:52:20,332 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-04-05 19:52:20,332 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-04-05 19:52:20,336 - werkzeug - INFO -  * Restarting with stat
+2025-04-05 19:52:22,290 - __main__ - INFO - Gemini model initialized successfully
+2025-04-05 19:52:22,328 - __main__ - INFO - Clinical data loaded successfully
+2025-04-05 19:52:22,353 - werkzeug - WARNING -  * Debugger is active!
+2025-04-05 19:52:22,360 - werkzeug - INFO -  * Debugger PIN: 901-337-066
+2025-04-05 19:52:39,470 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 19:52:39] "GET / HTTP/1.1" 200 -
+2025-04-05 19:52:39,552 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 19:52:39] "[33mGET /static/css/styles.css HTTP/1.1[0m" 404 -
+2025-04-05 19:52:39,555 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 19:52:39] "[33mGET /static/js/main.js HTTP/1.1[0m" 404 -
+2025-04-05 19:52:57,731 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 19:52:57] "GET / HTTP/1.1" 200 -
+2025-04-05 19:52:57,771 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 19:52:57] "[33mGET /static/css/styles.css HTTP/1.1[0m" 404 -
+2025-04-05 19:52:57,785 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 19:52:57] "[33mGET /static/js/main.js HTTP/1.1[0m" 404 -
+2025-04-05 20:36:37,939 - __main__ - INFO - Gemini model initialized successfully
+2025-04-05 20:36:37,980 - __main__ - INFO - Clinical data loaded successfully
+2025-04-05 20:36:38,078 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-04-05 20:36:38,078 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-04-05 20:36:38,086 - werkzeug - INFO -  * Restarting with stat
+2025-04-05 20:36:39,574 - __main__ - INFO - Gemini model initialized successfully
+2025-04-05 20:36:39,604 - __main__ - INFO - Clinical data loaded successfully
+2025-04-05 20:36:39,614 - werkzeug - WARNING -  * Debugger is active!
+2025-04-05 20:36:39,618 - werkzeug - INFO -  * Debugger PIN: 901-337-066
+2025-04-05 20:39:31,907 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:31] "GET / HTTP/1.1" 200 -
+2025-04-05 20:39:31,938 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:31] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-04-05 20:39:31,939 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:31] "[33mGET /static/css/fallback.css HTTP/1.1[0m" 404 -
+2025-04-05 20:39:31,943 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:31] "GET /static/js/main.js HTTP/1.1" 200 -
+2025-04-05 20:39:34,739 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:34] "GET / HTTP/1.1" 200 -
+2025-04-05 20:39:34,771 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:34] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-04-05 20:39:34,773 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:34] "[33mGET /static/css/fallback.css HTTP/1.1[0m" 404 -
+2025-04-05 20:39:34,777 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:34] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-04-05 20:39:45,448 - __main__ - ERROR - Error: No module named 'psutil'
+2025-04-05 20:39:45,448 - __main__ - ERROR - Additional Information: Error processing analysis request for file: unknown
+2025-04-05 20:39:45,448 - __main__ - ERROR - Stack Trace:
+Traceback (most recent call last):
+  File "C:\Users\balus\Downloads\SWN\SkinWellnessNavigator\server.py", line 209, in analyze
+    health_status, health_message = SystemMonitor.check_system_health()
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\balus\Downloads\SWN\SkinWellnessNavigator\utils.py", line 326, in check_system_health
+    metrics = SystemMonitor.get_system_metrics()
+  File "C:\Users\balus\Downloads\SWN\SkinWellnessNavigator\utils.py", line 310, in get_system_metrics
+    import psutil
+ModuleNotFoundError: No module named 'psutil'
+2025-04-05 20:39:45,451 - werkzeug - INFO - 127.0.0.1 - - [05/Apr/2025 20:39:45] "[35m[1mPOST /api/analyze HTTP/1.1[0m" 500 -
