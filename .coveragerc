@@ -1,0 +1,78 @@
+[run]
+branch = True
+source = .
+omit =
+    tests/*
+    setup.py
+    venv/*
+    env/*
+    .env/*
+    */site-packages/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+    except ImportError:
+    DEBUG
+    if debug:
+
+[html]
+directory = coverage_html
+title = Skin Wellness Navigator Coverage Report
+show_contexts = True
+
+[xml]
+output = coverage.xml
+
+[json]
+output = coverage.json
+pretty_print = True
+
+[paths]
+source =
+    .
+    /app
+    */site-packages
+
+[context]
+config =
+    testing
+    development
+    production
+
+[html:context]
+testing = Testing Environment
+development = Development Environment
+production = Production Environment
+
+[coverage:context:config]
+testing =
+    FLASK_ENV=testing
+    TESTING=true
+development =
+    FLASK_ENV=development
+    DEBUG=true
+production =
+    FLASK_ENV=production
+    DEBUG=false
+
+[coverage:context:test]
+unit = Unit Tests
+integration = Integration Tests
+api = API Tests
+
+[coverage:context:platform]
+linux = sys.platform == 'linux'
+windows = sys.platform == 'win32'
+darwin = sys.platform == 'darwin'
+
+[coverage:context:python]
+py37 = sys.version_info >= (3, 7) and sys.version_info < (3, 8)
+py38 = sys.version_info >= (3, 8) and sys.version_info < (3, 9)
+py39 = sys.version_info >= (3, 9) and sys.version_info < (3, 10)
+py310 = sys.version_info >= (3, 10)

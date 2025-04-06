@@ -1,0 +1,71 @@
+/* Fallback styling for Gemini AI unavailability */
+.fallback-result {
+    border: 1px dashed var(--warning-color) !important;
+}
+
+.fallback-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--warning-color);
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.fallback-notice {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 4px solid var(--warning-color);
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-color);
+}
+
+.fallback-notice i {
+    color: var(--warning-color);
+    margin-right: 8px;
+}
+
+.characteristics-section {
+    margin: 20px 0;
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.characteristics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.characteristic-item {
+    padding: 5px;
+}
+
+.reasoning-section {
+    margin: 20px 0;
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 15px;
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+/* Add position relative to the result card for absolute positioning */
+.result-card {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Notification color for warnings */
+.notification-warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.notification-warning i {
+    color: var(--warning-color);
+}
