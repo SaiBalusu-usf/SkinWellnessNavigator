@@ -9,99 +9,15 @@ from typing import Dict, List, Tuple, Optional, Union
 import logging
 from logging_config import log_data_processing, log_performance_metrics, log_error
 import time
-import random
 
 logger = logging.getLogger(__name__)
 
-def simulate_gemini_response(image_mime_type: str = None) -> Dict:
-    """
-    Generate a simulated response when Gemini model is unavailable or times out.
-    This provides a fallback to ensure the application remains functional.
-    
-    Args:
-        image_mime_type: MIME type of the analyzed image (optional)
-        
-    Returns:
-        Dict: Simulated analysis result in the same format as Gemini would return
-    """
-    try:
-        # Log that we're using the fallback
-        logger.warning("Using fallback simulation for Gemini model response")
-        
-        # Randomly choose classification (with higher probability for benign)
-        classification = random.choices(
-            ['Benign', 'Malignant'], 
-            weights=[0.7, 0.3], 
-            k=1
-        )[0]
-        
-        # Generate a confidence score
-        confidence = random.uniform(0.65, 0.92)
-        
-        # Define characteristics based on classification
-        if classification == 'Benign':
-            characteristics = {
-                'color': 'Uniform tan to brown coloration',
-                'border': 'Well-defined, smooth borders',
-                'symmetry': 'Mostly symmetrical',
-                'texture': 'Smooth, consistent texture'
-            }
-            reasoning = (
-                "The lesion shows uniform coloration without significant variation. "
-                "The borders are well-defined and regular. The overall shape is symmetrical. "
-                "These characteristics are typically associated with benign skin lesions."
-            )
-        else:
-            characteristics = {
-                'color': 'Varied coloration with dark and uneven areas',
-                'border': 'Irregular, poorly defined edges',
-                'symmetry': 'Asymmetrical shape',
-                'texture': 'Uneven texture with raised areas'
-            }
-            reasoning = (
-                "The lesion shows concerning features including color variation, "
-                "irregular borders, and asymmetrical shape. These features are "
-                "common in malignant skin lesions and warrant further examination."
-            )
-        
-        # Generate recommendations
-        recommendations = ResultsFormatter.get_recommendations(classification, confidence)
-        
-        # Add a note that this is a simulated response for transparency
-        recommendations.append("Note: This analysis is using simulated results as the AI model is currently unavailable")
-            
-        # Create the final response structure
-        analysis_result = {
-            'classification': classification,
-            'confidence': round(confidence, 2),
-            'characteristics': characteristics,
-            'reasoning': reasoning,
-            'recommendations': recommendations,
-            'is_fallback': True  # Flag to indicate this is a fallback response
-        }
-        
-        return analysis_result
-    except Exception as e:
-        log_error(logger, e, "Error in simulate_gemini_response")
-        # Return a very basic result in case of error in the simulator itself
-        return {
-            'classification': 'Uncertain',
-            'confidence': 0.5,
-            'characteristics': {
-                'color': 'Unable to analyze',
-                'border': 'Unable to analyze',
-                'symmetry': 'Unable to analyze',
-                'texture': 'Unable to analyze'
-            },
-            'reasoning': 'Analysis unavailable due to system error',
-            'recommendations': [
-                'Please try again later',
-                'Consult a healthcare professional if you have concerns'
-            ],
-            'is_fallback': True
-        }
-
-logger = logging.getLogger(__name__)
+def analysis_unavailable_result() -> Dict:
+    """Return a failure state without a diagnostic label or confidence."""
+    return {
+        'status': 'analysis_unavailable',
+        'message': 'Analysis is unavailable. Please try again later.'
+    }
 
 class ImageProcessor:
     """Handle image processing operations."""

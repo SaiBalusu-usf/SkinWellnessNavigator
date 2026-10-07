@@ -4,14 +4,13 @@ import numpy as np
 from PIL import Image
 import io
 import os
-import signal
 import time
 from datetime import datetime
 import logging
 import google.generativeai as genai
 from dotenv import load_dotenv
 import json
-from utils import simulate_gemini_response, SystemMonitor
+from utils import analysis_unavailable_result, SystemMonitor
 from logging_config import log_error, log_performance_metrics
 
 # Load environment variables
@@ -122,22 +121,14 @@ def analyze_with_gemini(image_bytes, mime_type, timeout=15):
         timeout: Timeout in seconds (default: 15)
         
     Returns:
-        dict: Analysis result or fallback result if timeout
+        dict: Analysis result or an analysis-unavailable state
     """
     start_time = time.time()
     
-    # Define signal handler for timeout
-    def timeout_handler(signum, frame):
-        raise TimeoutError(f"Gemini model analysis timed out after {timeout} seconds")
-    
     try:
         if vision_model is None:
-            logger.warning("Gemini model not initialized, using fallback")
-            return simulate_gemini_response(mime_type)
-
-        # Set timeout alarm
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(timeout)
+            logger.warning("Gemini model not initialized")
+            return analysis_unavailable_result()
 
         # Prepare image for Gemini
         image_part = {
@@ -164,11 +155,8 @@ def analyze_with_gemini(image_bytes, mime_type, timeout=15):
         """
 
         # Generate response
-        response = vision_model.generate_content([prompt, image_part])
+        response = vision_model.generate_content([prompt, image_part], request_options={'timeout': timeout})
         response.resolve()
-
-        # Cancel the alarm
-        signal.alarm(0)
 
         # Parse JSON from response
         # Find JSON content between curly braces
@@ -182,18 +170,12 @@ def analyze_with_gemini(image_bytes, mime_type, timeout=15):
         return analysis_result
 
     except TimeoutError as e:
-        # Cancel the alarm to prevent it from firing later
-        signal.alarm(0)
         logger.warning(f"Gemini analysis timeout: {str(e)}")
-        # Use fallback system
-        return simulate_gemini_response(mime_type)
+        return analysis_unavailable_result()
         
     except Exception as e:
-        # Cancel the alarm to prevent it from firing later
-        signal.alarm(0)
         logger.error(f"Error analyzing with Gemini: {str(e)}")
-        # Use fallback system
-        return simulate_gemini_response(mime_type)
+        return analysis_unavailable_result()
 
 @app.route('/')
 def home():
@@ -241,9 +223,9 @@ def analyze():
         # Get AI analysis
         analysis_result = analyze_with_gemini(image_bytes, file.mimetype)
         
-        # Check if we got a fallback result
-        using_fallback = 'is_fallback' in analysis_result and analysis_result['is_fallback']
-        
+        if analysis_result.get('status') == 'analysis_unavailable':
+            return jsonify(analysis_result), 503
+
         # Get clinical insights
         clinical_insights = get_clinical_insights(analysis_result['classification'])
         
@@ -255,19 +237,13 @@ def analyze():
             'reasoning': analysis_result['reasoning'],
             'recommendations': analysis_result['recommendations'],
             'clinical_insights': clinical_insights,
-            'timestamp': datetime.now().isoformat(),
-            'using_fallback': using_fallback  # Let the frontend know if we used the fallback
+            'timestamp': datetime.now().isoformat()
         }
         
-        # Log performance for the entire request
         end_time = time.time()
-        log_performance_metrics(logger, start_time, end_time, f"API Analysis Request - {'Fallback' if using_fallback else 'Normal'}")
-        
-        status_message = "Analysis completed successfully"
-        if using_fallback:
-            status_message += " (using fallback mechanism)"
-        logger.info(f"{status_message} for file: {file.filename}")
-        
+        log_performance_metrics(logger, start_time, end_time, "API Analysis Request")
+        logger.info("Analysis completed for file: %s", file.filename)
+
         return jsonify(results)
     
     except Exception as e:
