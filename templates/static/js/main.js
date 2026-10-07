@@ -32,11 +32,16 @@ async function analyzeImage(file) {
             body: formData
         });
 
+        const results = await response.json();
+        if (results.status === 'analysis_unavailable') {
+            displayResult(results);
+            showNotification('Analysis is unavailable. Please try again later.', 'warning');
+            return;
+        }
         if (!response.ok) {
             throw new Error('Analysis failed');
         }
 
-        const results = await response.json();
         displayResult(results);
         saveToHistory(results);
         showNotification('Analysis complete!', 'success');
@@ -104,29 +109,18 @@ function hideLoading() {
 // Display analysis results
 function displayResult(results) {
     const result = document.getElementById('result');
-    const confidencePercentage = (results.confidence * 100).toFixed(1);
-    const riskLevel = getRiskLevel(results.confidence);
-    const usingFallback = results.using_fallback || false;
-    
-    // If using fallback, show a notification
-    if (usingFallback) {
-        showNotification('Analysis was performed using fallback system as Gemini AI was unavailable.', 'warning');
+    if (results.status === 'analysis_unavailable') {
+        result.innerHTML = '<div class="result-card"><h3>Analysis unavailable</h3><p>Analysis is unavailable. Please try again later.</p></div>';
+        return;
     }
+    const confidencePercentage = (results.confidence * 100).toFixed(1);
     
     result.innerHTML = `
-        <div class="result-card ${usingFallback ? 'fallback-result' : ''}">
-            ${usingFallback ? '<div class="fallback-badge">Fallback Analysis</div>' : ''}
-            <h3><i class="fas ${results.prediction === 'Malignant' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> Analysis Complete</h3>
-            
-            ${usingFallback ? 
-            `<div class="fallback-notice">
-                <i class="fas fa-info-circle"></i>
-                This analysis was performed using a fallback system because the Gemini AI model was temporarily unavailable.
-                While this analysis provides useful information, consider re-analyzing later when the AI service is available.
-            </div>` : ''}
+        <div class="result-card">
+            <h3>Analysis Complete</h3>
             
             <div class="result-grid">
-                <div class="result-item ${riskLevel.class}">
+                <div class="result-item">
                     <h4>Classification</h4>
                     <p>${results.prediction}</p>
                     <div class="confidence-bar">
@@ -200,15 +194,6 @@ function displayResult(results) {
     `;
 }
 
-function getRiskLevel(confidence) {
-    if (confidence > 0.8) {
-        return { class: 'high-risk', label: 'High Risk' };
-    } else if (confidence > 0.5) {
-        return { class: 'medium-risk', label: 'Medium Risk' };
-    }
-    return { class: 'low-risk', label: 'Low Risk' };
-}
-
 // History tracking
 const analysisHistory = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
 
@@ -227,6 +212,16 @@ function updateHistoryDisplay() {
     const historyContainer = document.getElementById('history-container');
     if (!historyContainer) return;
     
+    const validHistory = analysisHistory.filter(item =>
+        item.results && !item.results.using_fallback &&
+        item.results.status !== 'analysis_unavailable' &&
+        typeof item.results.prediction === 'string' &&
+        typeof item.results.confidence === 'number'
+    );
+    if (validHistory.length !== analysisHistory.length) {
+        analysisHistory.splice(0, analysisHistory.length, ...validHistory);
+        localStorage.setItem('analysisHistory', JSON.stringify(analysisHistory));
+    }
     if (analysisHistory.length === 0) {
         historyContainer.innerHTML = '<p class="no-history">No analysis history yet</p>';
         return;
@@ -259,27 +254,15 @@ function exportReport(results) {
     };
     
     const reportText = `
-Skin Lesion Analysis Report
+Skin Wellness Navigator demo result
 Generated on: ${reportData.date}
 
-Analysis Results:
-- Classification: ${results.prediction}
-- Confidence: ${(results.confidence * 100).toFixed(1)}%
-- Similar Cases: ${results.similar_cases}
-- Common Morphology: ${results.risk_factors.common_morphology}
+Classification: ${results.prediction}
+Confidence: ${(results.confidence * 100).toFixed(1)}%
 
-Stage Distribution:
-${Object.entries(results.risk_factors.stage_distribution)
-    .map(([stage, count]) => `${stage}: ${count} cases`)
-    .join('\n')}
+This is an unvalidated demonstration, not a medical diagnosis.
+`.trim();
 
-Recommendations:
-${results.recommendations.map(rec => '- ' + rec).join('\n')}
-
-Note: This report is generated based on AI analysis and should be used as a general guide.
-Please consult with a dermatologist for professional medical advice.
-    `.trim();
-    
     const blob = new Blob([reportText], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
