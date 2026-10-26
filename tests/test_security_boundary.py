@@ -17,7 +17,9 @@ def image_bytes(fmt='PNG', size=(2, 2)):
 class SecurityBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        google = sys.modules.setdefault('google', types.ModuleType('google'))
         sdk = types.ModuleType('google.generativeai')
+        google.generativeai = sdk
         sys.modules.setdefault('google.generativeai', sdk)
         with patch.dict(os.environ, {'GEMINI_API_KEY': ''}), patch('dotenv.load_dotenv'), patch('logging.FileHandler', return_value=logging.NullHandler()):
             cls.server = importlib.import_module('server')
