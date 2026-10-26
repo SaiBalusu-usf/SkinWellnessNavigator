@@ -16,6 +16,19 @@ The repository includes clinical CSV files used for demonstration statistics. Th
 
 Tests and demonstrations should use synthetic images and mocked model responses. Do not run this demo with real patient data.
 
+Analysis requests are limited to loopback clients with a local Host and matching
+Origin. Public hosting requires an authenticated production API and quota
+controls. The built-in server starts with debugging disabled. Uploads must decode
+as PNG/JPEG and contain at most 10 million pixels; they are normalized to the
+existing 299-by-299 preprocessing size before any provider call. AI output and
+saved history are escaped before rendering; model output is never inserted into
+an event-handler attribute.
+
+Offline security regressions: `node --test tests/security_ui.test.cjs` and
+`python -m unittest discover -s tests -p test_security_boundary.py -v`.
+These mock the provider and use synthetic images. The full legacy pytest suite
+also needs its dependencies and repair of its duplicate `addopts` configuration.
+
 ## Security follow-up
 
 An earlier commit tracked a Gemini API key in `.env`. Removing the file from the current tree does not invalidate that key or erase Git history. The owner must revoke the exposed key in Google AI Studio or Google Cloud credentials, review usage, and configure any replacement privately. This change does not rewrite repository history.

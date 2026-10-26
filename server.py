@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 import json
 from utils import analysis_unavailable_result, SystemMonitor
 from logging_config import log_error, log_performance_metrics
+from urllib.parse import urlsplit
+from werkzeug.exceptions import HTTPException
 
 # Load environment variables
 load_dotenv()
@@ -36,8 +38,20 @@ class Config:
     CLINICAL_DATA_PATH = 'clinical.csv'
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    MAX_IMAGE_PIXELS = 10_000_000
 
 app.config.from_object(Config)
+
+@app.before_request
+def protect_local_analysis():
+    """This demo has no accounts: keep paid analysis local and same-origin."""
+    if request.path != '/api/analyze':
+        return
+    if (request.remote_addr not in {'127.0.0.1', '::1', '::ffff:127.0.0.1'}
+            or urlsplit(request.host_url).hostname not in {'localhost', '127.0.0.1', '::1'}
+            or (request.headers.get('Origin') and request.headers['Origin'] != request.host_url.rstrip('/'))
+            or request.headers.get('Sec-Fetch-Site', 'same-origin') not in {'same-origin', 'none'}):
+        return jsonify({'error': 'Local same-origin requests only'}), 403
 
 # Initialize Gemini model
 try:
@@ -68,7 +82,15 @@ def preprocess_image(image_data):
     """Preprocess the uploaded image for analysis."""
     try:
         # Convert bytes to image
-        image = Image.open(io.BytesIO(image_data))
+        with Image.open(io.BytesIO(image_data)) as source:
+            if source.format not in {'PNG', 'JPEG'}:
+                raise ValueError('Unsupported image format')
+            width, height = source.size
+            if width <= 0 or height <= 0 or width * height > app.config['MAX_IMAGE_PIXELS']:
+                raise ValueError('Image dimensions exceed the limit')
+            source.verify()
+        with Image.open(io.BytesIO(image_data)) as source:
+            image = source.convert('RGB')
         
         # Convert to RGB if needed
         if image.mode != 'RGB':
@@ -193,7 +215,6 @@ def analyze():
             logger.warning(f"System health check failed: {health_message}")
             return jsonify({
                 'error': 'System is currently under heavy load',
-                'details': health_message,
                 'retry_after': 30  # Suggest retrying after 30 seconds
             }), 503  # Service Unavailable
         
@@ -221,7 +242,9 @@ def analyze():
             return jsonify({'error': 'Invalid image content'}), 400
         
         # Get AI analysis
-        analysis_result = analyze_with_gemini(image_bytes, file.mimetype)
+        normalized = io.BytesIO()
+        image.save(normalized, format='PNG')
+        analysis_result = analyze_with_gemini(normalized.getvalue(), 'image/png')
         
         if analysis_result.get('status') == 'analysis_unavailable':
             return jsonify(analysis_result), 503
@@ -246,11 +269,12 @@ def analyze():
 
         return jsonify(results)
     
+    except HTTPException:
+        raise
     except Exception as e:
         log_error(logger, e, f"Error processing analysis request for file: {file.filename if 'file' in locals() else 'unknown'}")
         return jsonify({
-            'error': 'An error occurred during analysis',
-            'details': str(e)
+            'error': 'An error occurred during analysis'
         }), 500
 
 @app.errorhandler(413)
@@ -265,4 +289,4 @@ def server_error(e):
     return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, host='127.0.0.1')
