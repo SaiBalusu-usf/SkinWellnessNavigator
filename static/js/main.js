@@ -1,3 +1,8 @@
+// Provider responses and saved history are untrusted text.
+function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+}
+
 // Theme handling
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
@@ -122,7 +127,7 @@ function displayResult(results) {
             <div class="result-grid">
                 <div class="result-item">
                     <h4>Classification</h4>
-                    <p>${results.prediction}</p>
+                    <p>${escapeHTML(results.prediction)}</p>
                     <div class="confidence-bar">
                         <div class="confidence-level" style="width: ${confidencePercentage}%"></div>
                     </div>
@@ -131,12 +136,12 @@ function displayResult(results) {
                 
                 <div class="result-item">
                     <h4>Similar Cases</h4>
-                    <p>${results.clinical_insights && results.clinical_insights.similar_cases ? results.clinical_insights.similar_cases : 'N/A'} cases</p>
+                    <p>${escapeHTML(results.clinical_insights && results.clinical_insights.similar_cases ? results.clinical_insights.similar_cases : 'N/A')} cases</p>
                 </div>
                 
                 <div class="result-item">
                     <h4>Common Morphology</h4>
-                    <p>${results.clinical_insights && results.clinical_insights.common_morphology ? results.clinical_insights.common_morphology : 'N/A'}</p>
+                    <p>${escapeHTML(results.clinical_insights && results.clinical_insights.common_morphology ? results.clinical_insights.common_morphology : 'N/A')}</p>
                 </div>
             </div>
 
@@ -145,8 +150,8 @@ function displayResult(results) {
                 <div class="characteristics-grid">
                     ${Object.entries(results.characteristics || {}).map(([key, value]) => `
                         <div class="characteristic-item">
-                            <strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong>
-                            <span>${value}</span>
+                            <strong>${escapeHTML(key.charAt(0).toUpperCase() + key.slice(1))}:</strong>
+                            <span>${escapeHTML(value)}</span>
                         </div>
                     `).join('')}
                 </div>
@@ -159,11 +164,11 @@ function displayResult(results) {
                     ${Object.entries(results.clinical_insights.stage_distribution)
                         .map(([stage, count]) => `
                             <div class="stage-bar-item">
-                                <div class="stage-label">${stage}</div>
+                                <div class="stage-label">${escapeHTML(stage)}</div>
                                 <div class="stage-bar">
                                     <div class="stage-bar-fill" style="width: ${(count / Math.max(...Object.values(results.clinical_insights.stage_distribution))) * 100}%"></div>
                                 </div>
-                                <div class="stage-count">${count}</div>
+                                <div class="stage-count">${escapeHTML(count)}</div>
                             </div>
                         `).join('')}
                 </div>
@@ -172,18 +177,18 @@ function displayResult(results) {
 
             <div class="reasoning-section">
                 <h4>Analysis Reasoning</h4>
-                <p>${results.reasoning || 'No detailed reasoning available.'}</p>
+                <p>${escapeHTML(results.reasoning || 'No detailed reasoning available.')}</p>
             </div>
 
             <div class="recommendations">
                 <h4>Recommendations</h4>
                 <ul>
-                    ${results.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    ${results.recommendations.map(rec => `<li>${escapeHTML(rec)}</li>`).join('')}
                 </ul>
             </div>
 
             <div class="result-actions">
-                <button class="btn" onclick='exportReport(${JSON.stringify(results).replace(/'/g, "\\'")})'">
+                <button class="btn" data-export-result>
                     <i class="fas fa-download"></i> Export Report
                 </button>
                 <button class="btn btn-secondary" onclick="window.location.reload()">
@@ -192,6 +197,7 @@ function displayResult(results) {
             </div>
         </div>
     `;
+    result.querySelector('[data-export-result]').addEventListener('click', () => exportReport(results));
 }
 
 // History tracking
@@ -227,23 +233,29 @@ function updateHistoryDisplay() {
         return;
     }
     
-    historyContainer.innerHTML = analysisHistory.map(item => `
-        <div class="history-item ${item.results.prediction.toLowerCase()}-prediction">
+    historyContainer.innerHTML = analysisHistory.map((item, index) => `
+        <div class="history-item ${['benign', 'malignant'].includes(item.results.prediction.toLowerCase()) ? item.results.prediction.toLowerCase() : 'unknown'}-prediction">
             <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
             <div class="history-result">
-                <strong>Classification:</strong> ${item.results.prediction}<br>
+                <strong>Classification:</strong> ${escapeHTML(item.results.prediction)}<br>
                 <strong>Confidence:</strong> ${(item.results.confidence * 100).toFixed(1)}%
             </div>
             <div class="history-actions">
-                <button class="btn btn-sm" onclick="exportReport(${JSON.stringify(item.results)})">
+                <button class="btn btn-sm" data-history-export="${index}">
                     <i class="fas fa-download"></i> Export
                 </button>
-                <button class="btn btn-sm btn-secondary" onclick="showDetails(${JSON.stringify(item.results)})">
+                <button class="btn btn-sm btn-secondary" data-history-details="${index}">
                     <i class="fas fa-info-circle"></i> Details
                 </button>
             </div>
         </div>
     `).join('');
+    historyContainer.querySelectorAll('[data-history-export]').forEach(button => {
+        button.addEventListener('click', () => exportReport(analysisHistory[Number(button.dataset.historyExport)].results));
+    });
+    historyContainer.querySelectorAll('[data-history-details]').forEach(button => {
+        button.addEventListener('click', () => displayResult(analysisHistory[Number(button.dataset.historyDetails)].results));
+    });
 }
 
 // Export report functionality
@@ -257,7 +269,7 @@ function exportReport(results) {
 Skin Wellness Navigator demo result
 Generated on: ${reportData.date}
 
-Classification: ${results.prediction}
+Classification: ${escapeHTML(results.prediction)}
 Confidence: ${(results.confidence * 100).toFixed(1)}%
 
 This is an unvalidated demonstration, not a medical diagnosis.
@@ -358,7 +370,7 @@ function showNotification(message, type = 'info') {
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
         <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-        <span>${message}</span>
+        <span>${escapeHTML(message)}</span>
     `;
     
     document.body.appendChild(notification);
